@@ -1,83 +1,137 @@
-using System;
-using System.Security.Cryptography.X509Certificates;
-using System.Collections.Generic;
 using UnityEngine;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
-using Unity.Mathematics;
-using Unity.Collections;
 
-[RequireComponent(typeof(CharacterController))]
-public class playerscript1 : MonoBehaviour
+enum PlayerState
 {
-    private CharacterController Charcon;
+    Grounded,
+    Jumped
+}
+[RequireComponent(typeof(CharacterController))]
+public class PlayerController : MonoBehaviour
+{
+    [Header("References")]
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private GameObject fireballPrefab;
 
-    public Camera playerCamera;
-    [SerializeField] private GameObject fireballprefab;
-    [SerializeField] private GameObject Character;
-    [SerializeField] private float movementspeed = 0.1f;
-    [SerializeField] private float jumpforce = 0.4f;
-    [SerializeField] private float runspeed = 0.5f;
-    [SerializeField] private float lookspeed = 0.1f;
-    [SerializeField] private float gravity = -10f;
-    [SerializeField] private float yVelocity = 0f;
-    public Vector2 turn;
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float lookSpeed = 2f;
+
+    [Header("Jump & Gravity")]
+    [SerializeField] private float jumpVelocity = 6f;
+    [SerializeField] private float gravity = -20f;
+
+    [Header("Dash")]
+    [SerializeField] private float dashSpeedMultiplier = 2.5f;
+    [SerializeField] private float dashDuration = 0.25f;
+    [SerializeField] private float dashCooldown = 2f;
+
+    private CharacterController controller;
+    public Vector3 velocity;
+    private Vector2 mouseLook;
+    private float dashTimer;
+    private float dashCooldownTimer;
+    private float currentSpeed;
+    PlayerState currentState = PlayerState.Grounded;
+    bool isGrounded;
+
 
     void Start()
     {
-        Charcon = GetComponent<CharacterController>();
+        controller = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
-        playerCamera = Camera.main;
+        currentSpeed = moveSpeed;
     }
 
     void Update()
     {
-        // Mouse Look
-        turn.x += Input.GetAxis("Mouse X") * lookspeed;
-        turn.y += Input.GetAxis("Mouse Y") * lookspeed;
+        HandleMouseLook();
+        HandleDash();
+        HandleMovement();
+        HandleJump();
+        HandleFireball();
+    }
 
-        transform.localRotation = quaternion.Euler(0, turn.x, 0);
-        playerCamera.transform.localRotation = quaternion.Euler(-turn.y, 0, 0);
 
-        float moveHorizontal = Input.GetAxis("Horizontal");
-        float moveVertical = Input.GetAxis("Vertical");
+    void HandleMouseLook()
+    {
+        mouseLook.x += Input.GetAxis("Mouse X") * lookSpeed;
+        mouseLook.y -= Input.GetAxis("Mouse Y") * lookSpeed;
+        mouseLook.y = Mathf.Clamp(mouseLook.y, -80f, 80f);
 
-        Vector3 forward = playerCamera.transform.forward;
-        Vector3 right = playerCamera.transform.right;
-        forward.y = 0f;
-        right.y = 0f;
+        transform.rotation = Quaternion.Euler(0f, mouseLook.x, 0f);
+        playerCamera.transform.localRotation = Quaternion.Euler(mouseLook.y, 0f, 0f);
+    }
 
-        forward.Normalize();
-        right.Normalize();
+    void HandleMovement()
+    {
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
 
-        Vector3 move = forward * moveVertical + right * moveHorizontal;
+        Vector3 move = transform.right * x + transform.forward * z;
+        move.Normalize();
 
-        float currentSpeed = Input.GetKey(KeyCode.Q) ? runspeed : movementspeed;
+        velocity.x = move.x * currentSpeed;
+        velocity.z = move.z * currentSpeed;
+    }
 
-        Charcon.Move(move * Time.deltaTime * currentSpeed);
+    void HandleJump()
+    {
+        isGrounded = controller.isGrounded;
 
-        if (Charcon.isGrounded && yVelocity < 0)
+        if (isGrounded && velocity.y < 0f)
         {
-            Debug.Log(Charcon.isGrounded + " " + yVelocity);
-            yVelocity = 0f;
+            currentState = PlayerState.Grounded;
+            velocity.y = -2f; 
+        }
+        else
+        {
+            isGrounded = false;
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && currentState == PlayerState.Grounded)
+        {
+            currentState = PlayerState.Jumped;
+            velocity.y = jumpVelocity;
+            isGrounded = false;
+        }
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+
+
+    void HandleDash()
+    {
+        if (dashCooldownTimer > 0f)
+            dashCooldownTimer -= Time.deltaTime;
+
+        if (dashTimer > 0f)
+        {
+            dashTimer -= Time.deltaTime;
+            currentSpeed = Mathf.Lerp(
+                moveSpeed * dashSpeedMultiplier,
+                moveSpeed,
+                1f - (dashTimer / dashDuration)
+            );
+        }
+        else
+        {
+            currentSpeed = moveSpeed;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && Charcon.isGrounded)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownTimer <= 0f)
         {
-            Debug.Log(Charcon.isGrounded + " " + ",space is pressed");
-            yVelocity = jumpforce;
+            dashTimer = dashDuration;
+            dashCooldownTimer = dashCooldown;
         }
-
-        yVelocity += gravity * Time.deltaTime;
-        Charcon.Move(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
-
+    }
+    void HandleFireball()
+    {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Vector3 spawnpos = fireballprefab.transform.position + transform.forward;
-            Instantiate(fireballprefab, spawnpos, quaternion.identity);
+            Vector3 spawnPos = transform.position + transform.forward;
+            Instantiate(fireballPrefab, spawnPos, Quaternion.identity);
         }
-        
     }
 
 }
-
-

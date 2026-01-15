@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -268,7 +268,7 @@ GameObject:
   - component: {fileID: 403390156}
   - component: {fileID: 403390155}
   - component: {fileID: 403390154}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: baseplate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -497,7 +497,7 @@ GameObject:
   - component: {fileID: 441158456}
   - component: {fileID: 441158455}
   - component: {fileID: 441158457}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -517,14 +517,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 330585545}
-  Character: {fileID: 1103378159716076545, guid: b8781428f55a30048bb524eefb433ff8, type: 3}
-  movementspeed: 2
-  jumpforce: 3
-  runspeed: 10
-  lookspeed: 0.2
+  groundCheck: {fileID: 403390157}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 64
+  fireballPrefab: {fileID: 4877796587774282735, guid: c4c66080968586744a8b6197fae77f37, type: 3}
+  moveSpeed: 5
+  lookSpeed: 2
+  jumpVelocity: 5
   gravity: -10
-  yVelocity: 0
-  turn: {x: 0, y: 0}
+  groundDistance: 0.5
+  dashSpeedMultiplier: 2.5
+  dashDuration: 0.25
+  dashCooldown: 2
 --- !u!4 &441158456
 Transform:
   m_ObjectHideFlags: 0
@@ -627,6 +632,10 @@ PrefabInstance:
     - target: {fileID: 1103378159716076545, guid: b8781428f55a30048bb524eefb433ff8, type: 3}
       propertyPath: m_Name
       value: Capsule
+      objectReference: {fileID: 0}
+    - target: {fileID: 1103378159716076545, guid: b8781428f55a30048bb524eefb433ff8, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5811623637856536124, guid: b8781428f55a30048bb524eefb433ff8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -816,7 +825,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b6eef40d2c2bef4181358e5b02cac9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireballPrefab: {fileID: 4877796587774282735, guid: c4c66080968586744a8b6197fae77f37, type: 3}
   fireballSpeed: 10
   fireballLifeTime: 5
 --- !u!4 &1460792914
