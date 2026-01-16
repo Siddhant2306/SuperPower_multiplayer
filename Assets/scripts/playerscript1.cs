@@ -31,9 +31,6 @@ public class PlayerController : MonoBehaviour
     private float dashTimer;
     private float dashCooldownTimer;
     private float currentSpeed;
-    private Direction direction;
-
-
     void Start()
     {
         controller = GetComponent<CharacterController>();

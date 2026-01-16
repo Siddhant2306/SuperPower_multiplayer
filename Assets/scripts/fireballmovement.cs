@@ -6,6 +6,7 @@ public class FireballMovement : MonoBehaviour
 {
     [SerializeField] public float fireballSpeed = 10f;
     [SerializeField] public float fireballLifeTime = 5f;
+    public GameObject Explosion;
     Rigidbody fireball_rb;
     
     void Awake()
@@ -21,7 +22,10 @@ public class FireballMovement : MonoBehaviour
     }
     void OnCollisionEnter(Collision collision)
     {
+        Vector3 spawnPos = transform.position;
+        GameObject explosionInstance = Instantiate(Explosion, spawnPos, transform.rotation);
         Destroy(gameObject);
+        Destroy(explosionInstance,2f);
     }
 
 }
