@@ -1,18 +1,27 @@
 using Unity.VisualScripting;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class FireballMovement : MonoBehaviour
 {
-    [SerializeField] private float fireballSpeed = 10f;
-    [SerializeField] private float fireballLifeTime = 5f;
+    [SerializeField] public float fireballSpeed = 10f;
+    [SerializeField] public float fireballLifeTime = 5f;
+    Rigidbody fireball_rb;
+    
+    void Awake()
+    {
+       fireball_rb = gameObject.GetComponent<Rigidbody>();
+    }
 
     void Start()
     {
-        this.gameObject.GetComponent<Rigidbody>();
+        fireball_rb.linearVelocity = transform.forward * fireballSpeed;
+        Destroy(gameObject, fireballLifeTime);
+        Debug.Log(transform.forward);
     }
-    void Update()
+    void OnCollisionEnter(Collision collision)
     {
-        
+        Destroy(gameObject);
     }
 
 }

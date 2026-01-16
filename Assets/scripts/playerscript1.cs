@@ -1,10 +1,8 @@
+using System.ComponentModel;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-enum PlayerState
-{
-    Grounded,
-    Jumped
-}
+
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
@@ -33,8 +31,7 @@ public class PlayerController : MonoBehaviour
     private float dashTimer;
     private float dashCooldownTimer;
     private float currentSpeed;
-    PlayerState currentState = PlayerState.Grounded;
-    bool isGrounded;
+    private Direction direction;
 
 
     void Start()
@@ -66,34 +63,32 @@ public class PlayerController : MonoBehaviour
 
     void HandleMovement()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        float inputZ = Input.GetAxis("Vertical");  
+        float inputX = Input.GetAxis("Horizontal"); 
 
-        Vector3 move = transform.right * x + transform.forward * z;
-        move.Normalize();
+        Vector3 forward = transform.forward;
+        forward.y = 0f;
+        forward.Normalize();
 
-        velocity.x = move.x * currentSpeed;
-        velocity.z = move.z * currentSpeed;
+        Vector3 right = transform.right;
+        right.y = 0f;
+        right.Normalize();
+
+        Vector3 moveDir = (forward * inputZ + right * inputX).normalized;
+
+        velocity.x = moveDir.x * currentSpeed;
+        velocity.z = moveDir.z * currentSpeed;
     }
 
     void HandleJump()
     {
-        isGrounded = controller.isGrounded;
-
-        if (isGrounded && velocity.y < 0f)
+        if (controller.isGrounded && velocity.y < 0f)
         {
-            currentState = PlayerState.Grounded;
             velocity.y = -2f; 
         }
-        else
+        if (Input.GetKeyDown(KeyCode.Space) && controller.isGrounded)
         {
-            isGrounded = false;
-        }
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && currentState == PlayerState.Grounded)
-        {
-            currentState = PlayerState.Jumped;
             velocity.y = jumpVelocity;
-            isGrounded = false;
         }
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
@@ -129,8 +124,15 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Vector3 spawnPos = transform.position + transform.forward;
-            Instantiate(fireballPrefab, spawnPos, Quaternion.identity);
+            Vector3 spawnPos =
+                playerCamera.transform.position +
+                playerCamera.transform.forward * 1f;
+
+            Instantiate(
+                fireballPrefab,
+                spawnPos,
+                playerCamera.transform.rotation
+            );
         }
     }
 
